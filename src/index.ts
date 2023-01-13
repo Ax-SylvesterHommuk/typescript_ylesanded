@@ -1,49 +1,111 @@
 class Resistor {
-  r: number = 0;
-  maxPower: number = 0;
-  maxVoltage: number = 0;
-
-  constructor(r: number, maxPower: number, maxVoltage: number) {
-    this.r = r;
-    this.maxPower = maxPower;
-    this.maxVoltage = maxVoltage;
-  }
-  getCurrent(u: number): number {
-    return u / this.r;
-  }
-  getPower(u: number): number {
-    return u * this.getCurrent(u);
-  }
-  getMaxPower(): number {
-    return this.maxPower;
-  }
-  isVoltageAllowed(u: number): boolean {
-    return u <= this.maxVoltage;
-  }
+    r: number = 0;
+    constructor(r: number) {
+        this.r = r;
+    }
+    getCurrent(u: number): number {
+        return u / this.r;
+    }
+    getPower(u: number): number {
+        return u * this.getCurrent(u);
+    }
+    getResistance(): number {
+        return this.r;
+    }
+    getPotential(current: number): number {
+        return current * this.r;
+    }
 }
 
-// Lisa takistile väli lubatud maksimumvõimsuse kohta. Selle sisestamine on vajalik konstruktoris.
-// r, maxPower, maxVoltage
-let r1 = new Resistor(220, 100, 20);
+class SeriesCircuit {
+    resistors: Resistor[] = []
+    push(r: Resistor) {
+        this.resistors.push(r);
+    }
+    getTotalResistance() {
+        let sum: number = 0;
+        this.resistors.forEach((r: Resistor) => { sum += r.getResistance() });
+        return sum;
+    }
+    getCurrent(u: number) {
+        return u / this.getTotalResistance();
+    }
+    getTotalPower(u: number) {
+        return this.getCurrent(u) * u;
+    }
+    getBiggestResistorPower(u: number) {
+        if (this.resistors.length == 0) { return 0; }
+        let current: number = this.getCurrent(u);
+        let biggestPower: number = this.resistors[0].getPower(this.resistors[0].getPotential(current));
+        for (let i = 1; i < this.resistors.length; i++) {
+            let power: number = this.resistors[i].getPower(this.resistors[i].getPotential(current));
+            if (power > biggestPower) { biggestPower = power; }
+        }
+        return biggestPower;
+    }
+    getBiggestResistorResistance(): number {
+        if (this.resistors.length == 0) {
+            return 0; 
+        }
 
-// Loo käsk kontrollimaks, kas parameetrina antud pinge on vastava takisti puhul lubatud - st. kas pingestamisel eralduv võimsus jääb lubatud maksimuvõimsuse piiresse
-console.log(r1.isVoltageAllowed(19)); // true
-console.log(r1.isVoltageAllowed(21)); // false
+        let biggestResistance = this.resistors[0].getResistance();
 
-// Koosta takistitest massiiv. Koosta funktsioon, mis loob uue massiivi takistitest, mille lubatud võimsus jääb etteantud pinge korral lubatud piiresse.
-// r, maxPower, maxVoltage
-const resistors: Resistor[] = [
-    new Resistor(220, 100, 10),
-    new Resistor(330, 200, 15),
-    new Resistor(100, 50, 5),
-    new Resistor(100, 70, 8)
-];
+        for (let i = 1; i < this.resistors.length; i++) {
+            let resistance = this.resistors[i].getResistance();
+            if (resistance > biggestResistance) { 
+                biggestResistance = resistance;
+            }
+        }
+        return biggestResistance;
+    }
+    getBiggestVoltageDrop(u: number): number {
+        if (this.resistors.length == 0) {
+             return 0; 
+        }
 
-function getAllowedResistor(voltage: number, resistors: Resistor[]): Resistor[] {
-    return resistors.filter(resistor => resistor.isVoltageAllowed(voltage));
+        let current = this.getCurrent(u);
+        let biggestVoltageDrop = this.resistors[0].getResistance() * current;
+
+        for (let i = 1; i < this.resistors.length; i++) {
+            let voltageDrop = this.resistors[i].getResistance() * current;
+            if (voltageDrop > biggestVoltageDrop) {
+                 biggestVoltageDrop = voltageDrop; 
+            }
+        }
+        return biggestVoltageDrop;
+    }
 }
 
+// let sc1: SeriesCircuit = new SeriesCircuit();
+// sc1.push(new Resistor(220));
+// sc1.push(new Resistor(220));
+// sc1.push(new Resistor(330));
+// console.log(sc1.getTotalResistance());
+// console.log(sc1.getCurrent(12));
 
-// voltageAmount, resistors dict
-let allowedResistor = getAllowedResistor(8, resistors); // vastus: 3, kuna üks on alla 8 volti
-console.log(allowedResistor)
+// Koosta jadaühenduse klassist kaks eksemplari, katseta tulemusi mitmesuguse pinge korral. Võrdle käsitsi arvutatud tulemusi programmi pakutuga.
+let sc1: SeriesCircuit = new SeriesCircuit();
+let sc2: SeriesCircuit = new SeriesCircuit();
+
+sc1.push(new Resistor(220));
+sc1.push(new Resistor(220));
+sc1.push(new Resistor(330));
+console.log("sc1 Total Resistance: " + sc1.getTotalResistance());
+console.log("sc1 Current at 10V: " + sc1.getCurrent(10));
+console.log("sc1 Current at 20V: " + sc1.getCurrent(20));
+console.log("sc1 Total Power at 10V: " + sc1.getTotalPower(10)); // kogu eralduva võimsus
+console.log("sc1 Biggest Resistor Resistance: " + sc1.getBiggestResistorResistance());
+console.log("sc1 Biggest Voltage Drop at 5V: " + sc1.getBiggestVoltageDrop(5) + "V"); // langev pinge 5 volti all
+console.log("sc1 Biggest Resistor Power: " + (sc1.getBiggestResistorPower(12)));
+
+console.log("-------------------------------------------------")
+
+sc2.push(new Resistor(100));
+sc2.push(new Resistor(100));
+console.log("sc2 Total Resistance: " + sc2.getTotalResistance());
+console.log("sc2 Current at 10V: " + sc2.getCurrent(10));
+console.log("sc2 Current at 20V: " + sc2.getCurrent(20));
+console.log("sc2 Total Power at 10V: " + sc2.getTotalPower(10)); // kogu eralduva võimsus
+console.log("sc2 Biggest Resistor Resistance: " + sc2.getBiggestResistorResistance());
+console.log("sc2 Biggest Voltage Drop at 5V: " + sc2.getBiggestVoltageDrop(5) + "V"); // langev pinge 5 volti all
+console.log("sc2 Biggest Resistor Power: " + (sc2.getBiggestResistorPower(12)));
