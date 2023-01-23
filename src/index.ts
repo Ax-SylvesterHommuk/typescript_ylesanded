@@ -1,96 +1,91 @@
-class Resistor {
-    r: number = 0;
-    constructor(r: number) {
-        this.r = r;
-    }
-    getCurrent(u: number): number {
-        return u / this.r;
-    }
-    getPower(u: number): number {
-        return u * this.getCurrent(u);
-    }
-    getResistance(): number {
-        return this.r;
-    }
-}
+class ParallelCircuit {
+    private resistance1: number;
+    private resistance2: number;
+    private resistors: number[];
 
-class SeriesCircuit {
-    resistors: Resistor[] = []
-    push(r: Resistor) {
-        this.resistors.push(r);
+    constructor(resistance1: number, resistance2: number, resistors: number[]) {
+        this.resistance1 = resistance1;
+        this.resistance2 = resistance2;
+        this.resistors = resistors;
     }
-    getTotalResistance() {
-        let sum: number = 0;
-        this.resistors.forEach((r: Resistor) => { sum += r.getResistance() });
-        return sum;
+
+    getTotalResistance(): number {
+        return 1 / (1 / this.resistance1 + 1 / this.resistance2);
     }
-    getCurrent(u: number) {
-        return u / this.getTotalResistance();
+
+    getTotalResistance_2(): number { // Masiivi jaoks
+        let totalResistance = 0;
+        for (const resistance of this.resistors) {
+            totalResistance += 1 / resistance;
+        }
+        return 1 / totalResistance;
     }
 }
 
-// let sc1: SeriesCircuit = new SeriesCircuit();
-// sc1.push(new Resistor(220));
-// sc1.push(new Resistor(220));
-// sc1.push(new Resistor(110));
-// console.log(sc1.getTotalResistance());
-// console.log(sc1.getCurrent(12));
+let resistors:number[]=[110, 220, 220];
+let inversesum:number=0;
+for(let resistance of resistors){
+    inversesum+=1/resistance;
+}
+console.log(1/inversesum);
 
-let sc1: SeriesCircuit = new SeriesCircuit();
-sc1.push(new Resistor(220));
-sc1.push(new Resistor(220));
-sc1.push(new Resistor(220));
 
-let current = sc1.getCurrent(12);
-console.log("Current: " + current.toFixed(4));
+// Jalgratta tulede patarei pinge on 4,5 volti. Esituld läbi vool 1 amper. Milline on esitule võimsus? Milline on esitule takistus?
+let voltage = 4.5;
+let current = 1;
+let power = voltage * current;
+console.log("Power of the headlight: " + power + " watts");
 
-let v1 = current * sc1.resistors[0].getResistance();
-console.log("Voltage across first resistor: " + v1 + "V");
+let resistance = voltage / current;
+console.log("Front light resistance: " + resistance + " ohms");
 
-let v2 = current * sc1.resistors[1].getResistance();
-console.log("Voltage across second resistor: " + v2 + "V");
 
-let v3 = current * sc1.resistors[2].getResistance();
-console.log("Voltage across third resistor: " + v3 + "V");
+// Sama jalgratta tagatuld läbib vool 0,5 amprit. Milline on tagatule võimsus? Milline on tagatule takistus?
+let voltage_2 = 4.5;
+let current_2 = 0.5;
+let power_2 = voltage_2 * current_2;
+console.log("Wattage of the tail light: " + power_2 + " watts");
 
-let p1 = sc1.resistors[0].getPower(v1);
-console.log("Power dissipated by first resistor: " + p1.toFixed(4) + "W");
 
-let p2 = sc1.resistors[1].getPower(v2);
-console.log("Power dissipated by second resistor: " + p2.toFixed(4) + "W");
+// Milline on kahest rööbiti ühendatud jalgrattatulest koosneva lampide süsteemi võimsus kokku 4,5 voldi juures? Milline on selle lampide süsteemi kogutakistus oomides?
+let current1 = 1;
+let power1 = voltage * current1;
+let current2 = 0.5;
+let power2 = voltage * current2;
+let total_power = power1 + power2;
+console.log("Wattage of the system of lamps: " + total_power + " watts");
 
-let p3 = sc1.resistors[2].getPower(v3);
-console.log("Power dissipated by third resistor: " + p3.toFixed(4) + "W");
+let resistance1 = voltage / current1;
+let resistance2 = voltage / current2;
+let total_resistance = resistance1 + resistance2;
+console.log("Total resistance of the system of lamps: " + total_resistance + " ohms"); // oomides
 
-console.log("------------------------------------------------------------------");
 
-let sc2: SeriesCircuit = new SeriesCircuit();
-sc2.push(new Resistor(110));
-sc2.push(new Resistor(220));
-sc2.push(new Resistor(220));
+// Rööpühendusse paigutati takistid 2 oomi ning 2 oomi. Leia tekkinud rööpühenduse kogutakistus.
+let R1 = 2;
+let R2 = 2;
+let Rtotal = 1 / (1/R1 + 1/R2);
+console.log("Total resistance of the rail connection: " + Rtotal + " ohms");
 
-console.log("Total Series Resistance: " + sc2.getTotalResistance() + " ohms");
 
-let current2 = sc2.getCurrent(12);
-console.log("Current through series: " + current2.toFixed(5) + "A");
+// Rööpühendusse paigutati takistid 2 oomi ning 4 oomi. Leia tekkinud rööpühenduse kogutakistus.
+let R1_2 = 2;
+let R2_2 = 4;
+let Rtotal_2 = 1 / (1/R1_2 + 1/R2_2);
+console.log("Total resistance of the rail connection: " + Rtotal_2 + " ohms");
 
-let v1_2 = current * sc2.resistors[0].getResistance();
-console.log("Voltage across first resistor: " + v1_2 + "V");
 
-let v2_2 = current * sc2.resistors[1].getResistance();
-console.log("Voltage across second resistor: " + v2_2 + "V");
+// Programmi sisestatakse kahe takisti takistused. Väljasta nendest moodustatud rööpühenduse kogutakistus.
+let pc = new ParallelCircuit(2, 4, []); // Tühi masiiv kuna klassi constructoris on vaja aga siin pole.
+console.log("Total resistance: " + pc.getTotalResistance() + " ohms");
 
-let v3_2 = current * sc2.resistors[2].getResistance();
-console.log("Voltage across third resistor: " + v3_2 + "V");
 
-let p1_2 = sc2.resistors[0].getPower(v1_2);
-console.log("Power dissipated by first resistor: " + p1_2.toFixed(4) + "W");
+// Alamprogrammile antakse ette massiiv takistite takistustest. Tagasta nendest moodustatud rööpühenduse kogutakistus
+let resistors_2 = [2, 4, 6, 8];
+let pc_2 = new ParallelCircuit(0, 0, resistors_2);
+console.log("Total resistance: " + pc_2.getTotalResistance_2() + " ohms");
 
-let p2_2 = sc2.resistors[1].getPower(v2_2);
-console.log("Power dissipated by first resistor: " + p2_2.toFixed(4) + "W");
 
-let p3_2 = sc2.resistors[2].getPower(v3_2);
-console.log("Power dissipated by first resistor: " + p3_2.toFixed(4) + "W");
 
 
 
